@@ -180,7 +180,7 @@ function App() {
     if (isIframe && !sdkStarted.current) 
     {
       console.info("In Iframe logic");
-      sdkStarted.current = true; // Guard against React 18 double-run
+      sdkStarted.current = true; 
       
       const amazonConnectApp =  AmazonConnectApp.init({
         onCreate: async (event) => {
@@ -220,7 +220,7 @@ function App() {
         },
       });
 
-        // Save the provider to state so you can use it globally in your app
+        // Save the provider to state so you can use it globally in the app
       setConnectProvider(amazonConnectApp.provider);     
     };
   }, [accounts, instance, getUserInfo_Entra, getUserInfo_Connect, accounts.length]);

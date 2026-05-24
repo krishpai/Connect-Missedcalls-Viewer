@@ -7,7 +7,7 @@ interface NavbarProps {
   region: string;
   companyName: string;
 }
-
+/** TEST change */
 const Navbar: React.FC<NavbarProps> = ({ userName, region, companyName }) => {
   return (
     <AppBar       position="fixed"      sx={{ backgroundColor: "#1976d2", width: "100%", left: 0, top: 0 }}>
