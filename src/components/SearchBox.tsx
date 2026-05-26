@@ -8,15 +8,15 @@ import { useAcquireTokenWithRecovery } from "../hooks/useAcquireTokenWithRecover
 const API_ENDPOINT_ENTRA_AUTH = import.meta.env.VITE_API_URL_ENTRA_AUTH;
 const API_ENDPOINT_CONNECT_AUTH = import.meta.env.VITE_API_URL_CONNECT_AUTH;
 
-interface SearchBoxProps 
-{
+interface SearchBoxProps {
+  userName: string;
   region: string;
+  tier: string;
   entraAuth: boolean;
-  vmx3Admin: string | null | undefined;
   onSearchResultChange: (value: string) => void;
 }
 
-export const SearchBox: React.FC<SearchBoxProps> = ({ region, entraAuth, vmx3Admin, onSearchResultChange }) => {
+export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, entraAuth, onSearchResultChange }) => {
 
   const [vmCategory, setVMCategory] = useState<string>("ALL");
   const [startDate, setStartDate] = useState<string>("");
@@ -30,58 +30,50 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ region, entraAuth, vmx3Adm
     setLoading(true);
     setSearchFailed(false);
 
-          
+
     let apiUrl;
 
-    if(entraAuth)
-      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_voice_messages&vmx3Admin=${vmx3Admin}&vmx3_region=${vmCategory}&start_date=${startDate}&end_date=${endDate}`;
+    if (entraAuth)
+      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}`;
     else
-      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&vmx3Admin=${vmx3Admin}&vmx3_region=${vmCategory}&start_date=${startDate}&end_date=${endDate}`;
-    
+      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}`;
+
     console.log("apiUrl: " + apiUrl)
     let accessToken: string = "none";
 
-    try 
-    {
-      if(entraAuth)
-      {
+    try {
+      if (entraAuth) {
         const authResult = await acquireTokenWithRecovery({
           ...apiRequest
         });
         accessToken = authResult?.accessToken ?? "none";
       }
 
-      if (accessToken) 
-      {
-        const response = await fetch(apiUrl, { 
-            headers: { Authorization: `Bearer ${accessToken}` }
+      if (accessToken) {
+        const response = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${accessToken}` }
         });
-        
-        if (!response.ok) 
-        {
+
+        if (!response.ok) {
           throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        
-        if (data.success && data.matched_objects_count > 0) 
-        {
+
+        if (data.success && data.matched_objects_count > 0) {
           onSearchResultChange(JSON.stringify(data));
         }
-        else 
-        {
+        else {
           setSearchFailed(true);
           onSearchResultChange("");
         }
       }
-    } 
-    catch (e) 
-    {
+    }
+    catch (e) {
       console.log(e);
       onSearchResultChange("");
-    } 
-    finally 
-    {
+    }
+    finally {
       setLoading(false);
     }
   };
@@ -93,49 +85,49 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ region, entraAuth, vmx3Adm
   }, [region]);
 
   return (
-    <Box 
-      sx={{ 
-        width: "100%", 
+    <Box
+      sx={{
+        width: "100%",
         maxWidth: "1000px", // Limits the spread on ultra-wide monitors
         margin: "0 auto",   // Centers the entire component on the screen
-        p: 3 
+        p: 3
       }}
     >
-      
-      <Stack 
-        direction={{ xs: "column", md: "row" }} 
-        spacing={4} 
-        alignItems="flex-start" 
+
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        spacing={4}
+        alignItems="flex-start"
         justifyContent="center"
         sx={{ width: "100%", mb: 4 }}
       >
-        <DateRangeSelector 
-          onStartDateChange={(val) => setStartDate(val)} 
-          onEndDateChange={(val) => setEndDate(val)} 
+        <DateRangeSelector
+          onStartDateChange={(val) => setStartDate(val)}
+          onEndDateChange={(val) => setEndDate(val)}
         />
-        
-        {( region === "ALL" || region == "") && (<VMCategory 
-            vmCategory={vmCategory} 
-            onVMCategoryChange={(val) => setVMCategory(val)} 
-          />)
+
+        {(region === "ALL" || region == "") && (<VMCategory
+          vmCategory={vmCategory}
+          onVMCategoryChange={(val) => setVMCategory(val)}
+        />)
         }
-       
+
       </Stack>
 
       {/* Bottom Section: Action Button & Feedback 
       */}
-      <Box 
-        sx={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          alignItems: "center", 
-          textAlign: "center" 
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center"
         }}
       >
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           size="large"
-          onClick={searchClicked} 
+          onClick={searchClicked}
           disabled={loading}
           sx={{ minWidth: "150px", borderRadius: "8px" }}
         >

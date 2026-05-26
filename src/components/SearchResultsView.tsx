@@ -1,25 +1,25 @@
 import React, { useMemo, useState, useCallback, useRef } from "react";
 import { apiRequest } from "../authConfig";
 
-import { 
-  DataGridPro, 
-  GridFooterContainer, 
-  GridColumnMenu, 
-  type GridColDef, 
-  type GridRowSelectionModel, 
-  type GridColumnMenuProps, 
+import {
+  DataGridPro,
+  GridFooterContainer,
+  GridColumnMenu,
+  type GridColDef,
+  type GridRowSelectionModel,
+  type GridColumnMenuProps,
   type GridColumnVisibilityModel,
 } from '@mui/x-data-grid-pro';
 
-import { 
-  Tooltip, 
-  IconButton, 
-  Dialog, 
-  DialogActions, 
-  DialogContent, 
-  DialogContentText, 
-  DialogTitle, 
-  Button, 
+import {
+  Tooltip,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
   CircularProgress,
   Box,
   TablePagination,
@@ -30,7 +30,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PhoneIcon from '@mui/icons-material/Phone';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import TranscriptPopup from './TranscriptPopup'; 
+import TranscriptPopup from './TranscriptPopup';
 import { useAcquireTokenWithRecovery } from "../hooks/useAcquireTokenWithRecovery";
 
 // --- API Endpoints ---
@@ -42,9 +42,8 @@ const isIframe = window.self !== window.top;
 interface SearchResultsViewProps {
   searchResult: string | null;
   entraAuth: boolean;
-  userName: string | null | undefined;
-  vmx3Admin: string | null | undefined;
-  viewAll: string | null | undefined;
+  canDeleteVM: string | null | undefined;
+
   onDialNumberClicked: (value: string, contactid: string) => void;
 }
 
@@ -86,16 +85,16 @@ interface CustomFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 // --- Sub-Components ---
 
 const CustomFooter = (props: CustomFooterProps) => {
-  const { 
-    contactId, 
-    count = 0, 
-    page = 0, 
-    pageSize = 10, 
-    onPageChange, 
-    onPageSizeChange, 
-    ...other 
+  const {
+    contactId,
+    count = 0,
+    page = 0,
+    pageSize = 10,
+    onPageChange,
+    onPageSizeChange,
+    ...other
   } = props;
-  
+
   const [copied, setCopied] = useState(false);
 
   const handleCopyContactId = async () => {
@@ -108,10 +107,10 @@ const CustomFooter = (props: CustomFooterProps) => {
   };
 
   return (
-    <GridFooterContainer {...other} sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
+    <GridFooterContainer {...other} sx={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       minHeight: '52px !important',
       paddingY: 0
     }}>
@@ -132,7 +131,7 @@ const CustomFooter = (props: CustomFooterProps) => {
         component="div"
         count={count}
         page={page}
-        onPageChange={onPageChange ?? (() => {})}
+        onPageChange={onPageChange ?? (() => { })}
         rowsPerPage={pageSize}
         onRowsPerPageChange={onPageSizeChange}
         rowsPerPageOptions={[10, 15, 25]}
@@ -164,13 +163,13 @@ const CustomFooter = (props: CustomFooterProps) => {
 };
 
 const CustomColumnMenu = (props: GridColumnMenuProps) => (
-  <GridColumnMenu 
-    {...props} 
-    slots={{ 
-      columnMenuHideColumnItem: null, 
-      columnMenuManageColumnsItem: null, 
-      columnMenuColumnsItem: null 
-    }} 
+  <GridColumnMenu
+    {...props}
+    slots={{
+      columnMenuHideColumnItem: null,
+      columnMenuManageColumnsItem: null,
+      columnMenuColumnsItem: null
+    }}
   />
 );
 
@@ -182,7 +181,7 @@ const NoRowsOverlay = () => (
 
 // --- Main Component ---
 
-export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResult, userName, entraAuth, vmx3Admin, viewAll, onDialNumberClicked }) => {
+export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResult, entraAuth, canDeleteVM, onDialNumberClicked }) => {
   const acquireTokenWithRecovery = useAcquireTokenWithRecovery();
   const playingAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -207,12 +206,13 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
           fileName,
           ...details,
           vmx3_unread: readMessages.has(details.vmx3_contact_id) ? 'N' : details.vmx3_unread,
-          vmx3_queue_name: (details.vmx3_target === "agent" && details.vmx3_preferred_agent?.toLowerCase() === userName?.toLowerCase()) 
-            ? "Self" : (details.vmx3_queue_name === 'VMX3_VM_QUEUE' ? 'Self' : details.vmx3_queue_name)
+          vmx3_queue_name: details.vmx3_queue_name
+          //vmx3_queue_name: (details.vmx3_target === "agent" && details.vmx3_preferred_agent?.toLowerCase() === userName?.toLowerCase())
+          //  ? "Self" : (details.vmx3_queue_name === 'VMX3_VM_QUEUE' ? 'Self' : details.vmx3_queue_name)
         }))
-        .filter((row) => viewAll !== 'N' || row.vmx3_queue_name === 'Self');
-    } catch (e) { console.log(e);return []; }
-  }, [searchResult, userName, readMessages, deletedFileNames, viewAll]);
+        .filter((row) => row.vmx3_queue_name === 'Self');
+    } catch (e) { console.log(e); return []; }
+  }, [searchResult, readMessages, deletedFileNames]);
 
   const selectedContactId = useMemo(() => {
     const selectionIds = rowSelectionModel.ids;
@@ -244,7 +244,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
   const confirmDelete = useCallback(async () => {
     if (!itemToDelete) return;
     setIsDeleting(true);
-    const apiUrl = entraAuth 
+    const apiUrl = entraAuth
       ? `${API_ENDPOINT_ENTRA_AUTH}?function_code=delete_voice_message&vmx3_file_name=${itemToDelete.fileName}`
       : `${API_ENDPOINT_CONNECT_AUTH}?function_code=delete_voice_message&vmx3_file_name=${itemToDelete.fileName}`;
     try {
@@ -263,45 +263,55 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
 
   const columns = useMemo<GridColDef<GridRow>[]>(() => {
     const baseColumns: GridColDef<GridRow>[] = [
-      { field: 'id', filterable: false ,headerName: 'Contact ID', width: 120, align: 'center', getApplyQuickFilterFn: () => null},
-      { field: 'vmx3_unread', filterable: false, headerName: '', width: 70, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
+      { field: 'id', filterable: false, headerName: 'Contact ID', width: 120, align: 'center', getApplyQuickFilterFn: () => null },
+      {
+        field: 'vmx3_unread', filterable: false, headerName: '', width: 70, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
           <Tooltip title={params.value === 'Y' ? "Unread" : "Played"}>
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               {params.value === 'Y' ? <MailOutlineIcon color="primary" /> : <CheckCircleIcon color="action" />}
             </Box>
           </Tooltip>
-      )},
-      { field: 'vmx3_timestamp', headerName: 'Date', headerAlign:'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date(value as string).toLocaleString() : '' },
-      { field: 'vmx3_queue_name', headerName: 'Queue', headerAlign:'center', width: 210, align: 'center' },
-      { field: 'vmx3_customer_number', headerName: 'Caller number', headerAlign:'center', width: 130, align: 'center' },
-      { field: 'vmx3_dialed_number', headerName: 'Dialed number', headerAlign:'center', width: 130, align: 'center' },
-      { field: 'vmx3_lang_value', headerName: 'Language', headerAlign:'center', width: 100, align: 'center' },
-      { field: 'presigned_url', filterable: false, sortable: false, headerName: 'Listen', headerAlign:'center', width: 220, align: 'center', renderCell: (params) => (
+        )
+      },
+      { field: 'vmx3_timestamp', headerName: 'Date', headerAlign: 'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date(value as string).toLocaleString() : '' },
+      { field: 'vmx3_queue_name', headerName: 'Queue', headerAlign: 'center', width: 210, align: 'center' },
+      { field: 'vmx3_customer_number', headerName: 'Caller number', headerAlign: 'center', width: 130, align: 'center' },
+      { field: 'vmx3_dialed_number', headerName: 'Dialed number', headerAlign: 'center', width: 130, align: 'center' },
+      { field: 'vmx3_lang_value', headerName: 'Language', headerAlign: 'center', width: 100, align: 'center' },
+      {
+        field: 'presigned_url', filterable: false, sortable: false, headerName: 'Listen', headerAlign: 'center', width: 220, align: 'center', renderCell: (params) => (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
             <audio controls src={params.value as string} onPlay={handleAudioPlay} onEnded={() => handleMarkAsRead(params.row.id, params.row.fileName)} style={{ height: '24px', width: '250px' }} />
           </Box>
-      )},
-      { field: 'transcript', filterable: false, sortable: false, headerName: 'Transcript', headerAlign:'center', width: 120, align: 'center', getApplyQuickFilterFn: () => null,renderCell: (params) => (
+        )
+      },
+      {
+        field: 'transcript', filterable: false, sortable: false, headerName: 'Transcript', headerAlign: 'center', width: 120, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
             <TranscriptPopup text={(params.value as string) ?? ""} />
           </Box>
-      )},
-      { field: 'dial_action', headerName: 'Call back', sortable: false, width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
+        )
+      },
+      {
+        field: 'dial_action', headerName: 'Call back', sortable: false, width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
           <IconButton color="primary" onClick={() => onDialNumberClicked(params.row.vmx3_customer_number, params.row.vmx3_contact_id)}><PhoneIcon /></IconButton>
-      )},
-      { field: 'delete_action', filterable: false, sortable: false, headerName: '', width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (vmx3Admin === 'Y' || params.row.vmx3_queue_name === 'Self') ? (
+        )
+      },
+      {
+        field: 'delete_action', filterable: false, sortable: false, headerName: '', width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (canDeleteVM === 'Y' || params.row.vmx3_queue_name === 'Self') ? (
           <IconButton onClick={() => { setItemToDelete({ id: params.row.id, fileName: params.row.fileName }); setDeleteDialogOpen(true); }}><DeleteIcon /></IconButton>
-      ) : null }
+        ) : null
+      }
     ];
     return baseColumns.filter(col => isIframe || col.field !== 'dial_action');
-  }, [vmx3Admin, onDialNumberClicked, handleAudioPlay, handleMarkAsRead]);
+  }, [canDeleteVM, onDialNumberClicked, handleAudioPlay, handleMarkAsRead]);
 
   if (!searchResult) return <Box sx={{ p: 5, textAlign: 'center' }}>No search performed.</Box>;
 
   return (
     <Box sx={{ height: 600, width: '100%', pt: 2 }}>
       <DataGridPro
-        disableColumnMenu 
+        disableColumnMenu
         disableColumnSelector
         pagination
         showToolbar
@@ -314,25 +324,25 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
         rowSelectionModel={rowSelectionModel}
         onRowSelectionModelChange={setRowSelectionModel}
         hideFooterSelectedRowCount
-        slots={{ 
-          columnMenu: CustomColumnMenu, 
-          footer: CustomFooter, 
+        slots={{
+          columnMenu: CustomColumnMenu,
+          footer: CustomFooter,
           noRowsOverlay: NoRowsOverlay,
         }}
-        slotProps={{ 
-          footer: { 
+        slotProps={{
+          footer: {
             contactId: selectedContactId,
             count: gridRows.length,
             page: paginationModel.page,
             pageSize: paginationModel.pageSize,
-            onPageChange: (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => 
+            onPageChange: (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) =>
               setPaginationModel(prev => ({ ...prev, page: newPage })),
-            onPageSizeChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => 
+            onPageSizeChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
               setPaginationModel(prev => ({ ...prev, pageSize: parseInt(event.target.value, 10), page: 0 })),
           } as CustomFooterProps, // Use our defined interface instead of 'any'
           toolbar: {
             showQuickFilter: true,
-            
+
             printOptions: { disableToolbarButton: true },
             style: { backgroundColor: '#e0e0e0' },
           }
