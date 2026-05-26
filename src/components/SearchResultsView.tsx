@@ -210,7 +210,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
           //vmx3_queue_name: (details.vmx3_target === "agent" && details.vmx3_preferred_agent?.toLowerCase() === userName?.toLowerCase())
           //  ? "Self" : (details.vmx3_queue_name === 'VMX3_VM_QUEUE' ? 'Self' : details.vmx3_queue_name)
         }))
-        .filter((row) => row.vmx3_queue_name === 'Self');
+
     } catch (e) { console.log(e); return []; }
   }, [searchResult, readMessages, deletedFileNames]);
 
