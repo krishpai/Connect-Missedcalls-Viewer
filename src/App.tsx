@@ -40,7 +40,7 @@ function App() {
   const [tier, setTier] = useState("");
 
   const [userName, setUserName] = useState<string | null | undefined>("");
-  const [canDeleteVM, setCanDeleteVM] = useState<string | null | undefined>("N");
+  const [canDeleteVM, setCanDeleteVM] = useState<string | null | undefined>("Y");
 
   const [searchResult, setSearchResult] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -87,7 +87,7 @@ function App() {
       if (data?.success && data?.found) {
         setRegion(data.region);
         setTier(data.tier);
-        setCanDeleteVM(data.canDeleteVM);
+        setCanDeleteVM('Y');
 
 
         console.log("User region identified:", data.region);
@@ -130,7 +130,7 @@ function App() {
         setRegion(data.region);
         setTier(data.tier);
         setUserName(data.userName);
-        setCanDeleteVM(data.canDeleteVM);
+        setCanDeleteVM('Y');
 
         console.log("User name identified:", data.userName);
         console.log("User region identified:", data.region);
