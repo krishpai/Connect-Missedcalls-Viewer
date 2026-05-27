@@ -106,7 +106,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
           onEndDateChange={(val) => setEndDate(val)}
         />
 
-        {(region === "ALL" || region == "") && (<VMCategory
+        {(tier === "SUPERUSER") && (<VMCategory
           vmCategory={vmCategory}
           onVMCategoryChange={(val) => setVMCategory(val)}
         />)
