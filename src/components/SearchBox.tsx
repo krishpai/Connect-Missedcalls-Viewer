@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { apiRequest } from "../authConfig";
 import { DateRangeSelector } from "./DateRangeSelector";
 import { VMCategory } from "./VMCategory";
-import { Box, Stack, Typography, Button } from "@mui/material";
+import { Box, Stack, Typography, Button, FormControl, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import { useAcquireTokenWithRecovery } from "../hooks/useAcquireTokenWithRecovery";
 
 const API_ENDPOINT_ENTRA_AUTH = import.meta.env.VITE_API_URL_ENTRA_AUTH;
@@ -21,22 +21,25 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
   const [vmCategory, setVMCategory] = useState<string>("ALL");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [searchFailed, setSearchFailed] = useState<boolean>(false);
+  const [searchFailedNoMessages, setSearchFailedNoMessages] = useState<boolean>(false);
+  const [searchFailedServerOverloaded, setSearchFailedServerOverloaded] = useState<boolean>(false);
+  const [queryType, setQueryType] = useState<string>("New");
   const [loading, setLoading] = useState<boolean>(false);
 
   const acquireTokenWithRecovery = useAcquireTokenWithRecovery();
 
   const searchClicked = async () => {
     setLoading(true);
-    setSearchFailed(false);
+    setSearchFailedNoMessages(false);
+    setSearchFailedServerOverloaded(false);
 
 
     let apiUrl;
 
     if (entraAuth)
-      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}`;
+      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
     else
-      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}`;
+      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
 
     console.log("apiUrl: " + apiUrl)
     let accessToken: string = "none";
@@ -55,6 +58,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
         });
 
         if (!response.ok) {
+          setSearchFailedServerOverloaded(true);
           throw new Error(`API error: ${response.status} ${response.statusText}`);
         }
 
@@ -64,7 +68,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
           onSearchResultChange(JSON.stringify(data));
         }
         else {
-          setSearchFailed(true);
+          setSearchFailedNoMessages(true);
           onSearchResultChange("");
         }
       }
@@ -99,7 +103,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
         spacing={4}
         alignItems="flex-start"
         justifyContent="center"
-        sx={{ width: "100%", mb: 4 }}
+        sx={{ width: "100%", mb: 2 }}
       >
         <DateRangeSelector
           onStartDateChange={(val) => setStartDate(val)}
@@ -124,6 +128,19 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
           textAlign: "center"
         }}
       >
+        <FormControl sx={{ mb: 1, alignItems: "center" }}>
+          <RadioGroup
+            row
+            aria-labelledby="query-type-label"
+            name="queryType"
+            value={queryType}
+            onChange={(e) => setQueryType(e.target.value)}
+          >
+            <FormControlLabel value="New" control={<Radio />} label="New" />
+            <FormControlLabel value="All" control={<Radio />} label="All" />
+            <FormControlLabel value="Deleted" control={<Radio />} label="Deleted" />
+          </RadioGroup>
+        </FormControl>
         <Button
           variant="contained"
           size="large"
@@ -140,9 +157,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
           </Typography>
         )}
 
-        {!loading && searchFailed && (
+        {!loading && searchFailedNoMessages && (
           <Typography color="error" sx={{ mt: 2, fontWeight: 500 }}>
             No voice messages found for the selected criteria.
+          </Typography>
+        )}
+        {!loading && searchFailedServerOverloaded && (
+          <Typography color="error" sx={{ mt: 2, fontWeight: 500 }}>
+            Server timeout, too many voice messages - please reduce the date range or select one region.
           </Typography>
         )}
       </Box>
