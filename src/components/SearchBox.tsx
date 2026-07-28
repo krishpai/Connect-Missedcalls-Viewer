@@ -164,7 +164,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
         )}
         {!loading && searchFailedServerOverloaded && (
           <Typography color="error" sx={{ mt: 2, fontWeight: 500 }}>
-            Server timeout, too many voice messages - please reduce the date range or select one region.
+            Search timed out. Narrow the date range or select one region.
           </Typography>
         )}
       </Box>
