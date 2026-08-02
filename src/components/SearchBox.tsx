@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { apiRequest } from "../authConfig";
 import { DateRangeSelector } from "./DateRangeSelector";
-import { VMCategory } from "./VMCategory";
 import { Box, Stack, Typography, Button, FormControl, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import { useAcquireTokenWithRecovery } from "../hooks/useAcquireTokenWithRecovery";
 
@@ -10,15 +9,13 @@ const API_ENDPOINT_CONNECT_AUTH = import.meta.env.VITE_API_URL_CONNECT_AUTH;
 
 interface SearchBoxProps {
   userName: string;
-  region: string;
-  tier: string;
   entraAuth: boolean;
   onSearchResultChange: (value: string) => void;
 }
 
-export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, entraAuth, onSearchResultChange }) => {
+export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSearchResultChange }) => {
 
-  const [vmCategory, setVMCategory] = useState<string>("ALL");
+
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [searchFailedNoMessages, setSearchFailedNoMessages] = useState<boolean>(false);
@@ -37,9 +34,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
     let apiUrl;
 
     if (entraAuth)
-      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
+      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_missed_calls_records&userName=${userName}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
     else
-      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&vmx3_region=${vmCategory}&user_tier=${tier}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
+      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
 
     console.log("apiUrl: " + apiUrl)
     let accessToken: string = "none";
@@ -82,12 +79,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
     }
   };
 
-  useEffect(() => {
-    if (region) {
-      setVMCategory(region);
-    }
-  }, [region]);
-
   return (
     <Box
       sx={{
@@ -110,12 +101,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
           onEndDateChange={(val) => setEndDate(val)}
         />
 
-        {(tier === "SUPERUSER") && (<VMCategory
-          vmCategory={vmCategory}
-          onVMCategoryChange={(val) => setVMCategory(val)}
-        />)
-        }
-
       </Stack>
 
       {/* Bottom Section: Action Button & Feedback 
@@ -129,26 +114,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, tier, en
         }}
       >
         <FormControl sx={{ mb: 1, alignItems: "center" }}>
-          <RadioGroup
-            row
-            aria-labelledby="query-type-label"
-            name="queryType"
-            value={queryType}
-            onChange={(e) => setQueryType(e.target.value)}
-          >
-            <FormControlLabel value="New" control={<Radio />} label="New" />
+          <RadioGroup row aria-labelledby="query-type-label" name="queryType" value={queryType} onChange={(e) => setQueryType(e.target.value)} >
+            <FormControlLabel value="Self" control={<Radio />} label="New" />
+            <FormControlLabel value="Queue" control={<Radio />} label="Deleted" />
             <FormControlLabel value="All" control={<Radio />} label="All" />
-            <FormControlLabel value="Deleted" control={<Radio />} label="Deleted" />
           </RadioGroup>
         </FormControl>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={searchClicked}
-          disabled={loading}
-          sx={{ minWidth: "150px", borderRadius: "8px" }}
-        >
-          {loading ? "Fetching..." : "Retrieve Messages"}
+        <Button variant="contained" size="large" onClick={searchClicked} disabled={loading} sx={{ minWidth: "150px", borderRadius: "8px" }}>
+          {loading ? "Fetching..." : "Retrieve Missed Calls"}
         </Button>
 
         {loading && (

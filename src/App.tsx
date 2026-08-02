@@ -10,12 +10,9 @@ import { SearchResultsView } from "./components/SearchResultsView";
 import Divider from '@mui/material/Divider';
 import { InteractionType } from "@azure/msal-browser";
 import { useMsal } from "@azure/msal-react";
-import { apiRequest } from "./authConfig";
-import { useAcquireTokenWithRecovery } from "./hooks/useAcquireTokenWithRecovery";
 
 import "./App.css";
 
-const API_ENDPOINT_ENTRA_AUTH = import.meta.env.VITE_API_URL_ENTRA_AUTH;
 const API_ENDPOINT_CONNECT_AUTH = import.meta.env.VITE_API_URL_CONNECT_AUTH;
 const API_SCOPE = import.meta.env.VITE_API_SCOPE;
 const isIframe = window.self !== window.top; // Immediate check
@@ -36,11 +33,8 @@ function App() {
   const [contactClient, setContactClient] = useState<ContactClient | null>(null);
 
   // Business State
-  const [region, setRegion] = useState("");
-  const [tier, setTier] = useState("");
 
   const [userName, setUserName] = useState<string | null | undefined>("");
-  const [canDeleteVM, setCanDeleteVM] = useState<string | null | undefined>("Y");
 
   const [searchResult, setSearchResult] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -49,61 +43,6 @@ function App() {
 
   // Refs to prevent double-init or stale closures
   const sdkStarted = useRef(false);
-
-  const acquireTokenWithRecovery = useAcquireTokenWithRecovery();
-
-  /**
-   * Fetches the user region from the backend API for standalone app.
-   */
-  const getUserInfo_Entra = useCallback(async (username: string) => {
-
-    const apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=get_region_of_user&AgentUserName=${encodeURIComponent(username)}`;
-
-    try {
-      setLoading(true);
-
-      const authResult = await acquireTokenWithRecovery({ ...apiRequest });
-
-      // 2. Guard against missing tokens
-      if (!authResult?.accessToken) {
-        throw new Error("Failed to acquire a valid access token.");
-      }
-
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers:
-        {
-          Authorization: `Bearer ${authResult.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data?.success && data?.found) {
-        setRegion(data.region);
-        setTier(data.tier);
-        setCanDeleteVM('Y');
-
-
-        console.log("User region identified:", data.region);
-        console.log("User tier identified:", data.tier);
-        console.log("User VM delete status identified:", data.canDeleteVM);
-
-      }
-    }
-    catch (error) {
-      console.error("Failed to fetch user region:", error);
-    }
-    finally {
-      setLoading(false);
-    }
-    // Include all stable dependencies
-  }, [acquireTokenWithRecovery]);
 
   /**
    * Fetches the user region from the backend API for iframe embedded app.
@@ -127,15 +66,9 @@ function App() {
 
       const data = await response.json();
       if (data?.success && data?.found) {
-        setRegion(data.region);
-        setTier(data.tier);
         setUserName(data.userName);
-        setCanDeleteVM('Y');
 
         console.log("User name identified:", data.userName);
-        console.log("User region identified:", data.region);
-        console.log("User tier identified:", data.tier);
-        console.log("User VM delete status identified:", data.canDeleteVM);
 
       }
       else {
@@ -144,7 +77,6 @@ function App() {
     }
     catch (error) {
       console.log('error: ', error)
-      setRegion("ALL");
       setUserName("Unknown user");
     }
 
@@ -162,7 +94,6 @@ function App() {
         console.warn("No preferred_username found in claims.");
         return;
       }
-      getUserInfo_Entra(username);
     }
 
     if (isMsalInternalFrame) return;
@@ -212,7 +143,7 @@ function App() {
       // Save the provider to state so you can use it globally in the app
       setConnectProvider(amazonConnectApp.provider);
     };
-  }, [accounts, instance, getUserInfo_Entra, getUserInfo_Connect, accounts.length]);
+  }, [accounts, instance, getUserInfo_Connect, accounts.length]);
 
 
   const makeOutboundCall = useCallback(async (phoneNumber: string, relatedContactid: string) => {
@@ -246,14 +177,14 @@ function App() {
 
   // Main UI Fragment to keep code DRY
   const renderMainContent = () => (
-    <PageLayout userName={userName ?? "User"} region={region}>
+    <PageLayout userName={userName ?? "User"} >
       {loading ? (
         <p>Loading preferences...</p>
       ) : (
         <>
-          <SearchBox userName={userName ?? "User"} region={region} tier={tier} entraAuth={!isIframe} onSearchResultChange={setSearchResult} />
+          <SearchBox userName={userName ?? "User"} entraAuth={!isIframe} onSearchResultChange={setSearchResult} />
           <Divider sx={{ my: 0.5, border: "1px solid", borderColor: "primary.dark" }} />
-          {searchResult && (<SearchResultsView searchResult={searchResult} entraAuth={!isIframe} canDeleteVM={canDeleteVM} onDialNumberClicked={makeOutboundCall} />)}
+          {searchResult && (<SearchResultsView searchResult={searchResult} entraAuth={!isIframe} onDialNumberClicked={makeOutboundCall} />)}
         </>
       )}
     </PageLayout>

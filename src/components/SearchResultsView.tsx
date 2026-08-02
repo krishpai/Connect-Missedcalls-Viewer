@@ -1,5 +1,4 @@
-import React, { useMemo, useState, useCallback, useRef } from "react";
-import { apiRequest } from "../authConfig";
+import React, { useMemo, useState } from "react";
 
 import {
   DataGridPro,
@@ -14,54 +13,33 @@ import {
 import {
   Tooltip,
   IconButton,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button,
-  CircularProgress,
   Box,
   TablePagination,
 } from '@mui/material';
 
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PhoneIcon from '@mui/icons-material/Phone';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import TranscriptPopup from './TranscriptPopup';
-import { useAcquireTokenWithRecovery } from "../hooks/useAcquireTokenWithRecovery";
 
-// --- API Endpoints ---
-const API_ENDPOINT_ENTRA_AUTH = import.meta.env.VITE_API_URL_ENTRA_AUTH;
-const API_ENDPOINT_CONNECT_AUTH = import.meta.env.VITE_API_URL_CONNECT_AUTH;
 const isIframe = window.self !== window.top;
 
 // --- Interfaces ---
 interface SearchResultsViewProps {
   searchResult: string | null;
   entraAuth: boolean;
-  canDeleteVM: string | null | undefined;
 
   onDialNumberClicked: (value: string, contactid: string) => void;
 }
 
 interface MatchedObject {
-  vmx3_unread?: string;
-  vmx3_contact_id: string;
-  vmx3_customer_number: string;
-  vmx3_queue_name: string;
-  vmx3_target: string;
-  vmx3_preferred_agent: string;
-  vmx3_region: string;
-  vmx3_timestamp: string;
-  vmx3_lang_value: string;
-  vmx3_call_category: string;
-  vmx3_dialed_number: string;
-  vmx3_queue: string;
-  transcript: string;
-  presigned_url: string;
+  contact_id: string;
+  customer_number: string;
+  queue_name: string;
+  initiation_timestamp: string;
+  system_number: string;
+  queue_id: string;
+  language: string;
 }
 
 interface GridRow extends MatchedObject {
@@ -181,17 +159,11 @@ const NoRowsOverlay = () => (
 
 // --- Main Component ---
 
-export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResult, entraAuth, canDeleteVM, onDialNumberClicked }) => {
-  const acquireTokenWithRecovery = useAcquireTokenWithRecovery();
-  const playingAudioRef = useRef<HTMLAudioElement | null>(null);
+export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResult, onDialNumberClicked }) => {
 
-  const [readMessages, setReadMessages] = useState<Set<string>>(new Set());
-  const [deletedFileNames, setDeletedFileNames] = useState<Set<string>>(new Set());
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({ id: false });
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({ type: 'include', ids: new Set() });
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string, fileName: string } | null>(null);
+
   const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
 
   const gridRows = useMemo<GridRow[]>(() => {
@@ -200,111 +172,40 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
       const data = JSON.parse(searchResult);
       const rawData: Record<string, MatchedObject> = data.matched_objects || {};
       return Object.entries(rawData)
-        .filter(([fileName]) => !deletedFileNames.has(fileName))
         .map(([fileName, details]) => ({
-          id: details.vmx3_contact_id,
+          id: details.contact_id,
           fileName,
           ...details,
-          vmx3_unread: readMessages.has(details.vmx3_contact_id) ? 'N' : details.vmx3_unread,
-          vmx3_queue_name: details.vmx3_queue_name
-          //vmx3_queue_name: (details.vmx3_target === "agent" && details.vmx3_preferred_agent?.toLowerCase() === userName?.toLowerCase())
-          //  ? "Self" : (details.vmx3_queue_name === 'VMX3_VM_QUEUE' ? 'Self' : details.vmx3_queue_name)
+          queue_name: details.queue_name
         }))
 
     } catch (e) { console.log(e); return []; }
-  }, [searchResult, readMessages, deletedFileNames]);
+  }, [searchResult]);
 
   const selectedContactId = useMemo(() => {
     const selectionIds = rowSelectionModel.ids;
     if (!selectionIds || selectionIds.size === 0 || selectionIds.size > 1) return null;
     const firstId = selectionIds.values().next().value as string;
-    return gridRows.find((row) => row.id === firstId)?.vmx3_contact_id || null;
+    return gridRows.find((row) => row.id === firstId)?.contact_id || null;
   }, [rowSelectionModel, gridRows]);
 
-  const handleAudioPlay = useCallback((e: React.SyntheticEvent<HTMLAudioElement>) => {
-    if (playingAudioRef.current && playingAudioRef.current !== e.currentTarget) playingAudioRef.current.pause();
-    playingAudioRef.current = e.currentTarget;
-  }, []);
-
-  const handleMarkAsRead = useCallback(async (contactId: string, fileName: string) => {
-    setReadMessages(prev => new Set(prev).add(contactId));
-    const apiUrl = entraAuth
-      ? `${API_ENDPOINT_ENTRA_AUTH}?function_code=mark_voice_message_read&vmx3_file_name=${fileName}`
-      : `${API_ENDPOINT_CONNECT_AUTH}?function_code=mark_voice_message_read&vmx3_file_name=${fileName}`;
-    try {
-      let token = "None";
-      if (entraAuth) {
-        const authResult = await acquireTokenWithRecovery({ ...apiRequest });
-        if (authResult?.accessToken) token = authResult.accessToken;
-      }
-      await fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
-    } catch (error) { console.error("Mark read error:", error); }
-  }, [entraAuth, acquireTokenWithRecovery]);
-
-  const confirmDelete = useCallback(async () => {
-    if (!itemToDelete) return;
-    setIsDeleting(true);
-    const apiUrl = entraAuth
-      ? `${API_ENDPOINT_ENTRA_AUTH}?function_code=delete_voice_message&vmx3_file_name=${itemToDelete.fileName}`
-      : `${API_ENDPOINT_CONNECT_AUTH}?function_code=delete_voice_message&vmx3_file_name=${itemToDelete.fileName}`;
-    try {
-      let token = "None";
-      if (entraAuth) {
-        const authResult = await acquireTokenWithRecovery({ ...apiRequest });
-        if (authResult?.accessToken) token = authResult.accessToken;
-      }
-      const resp = await fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
-      if (resp.ok) {
-        setDeletedFileNames(prev => new Set(prev).add(itemToDelete.fileName));
-        setDeleteDialogOpen(false);
-      }
-    } catch (e) { console.error("Delete error:", e); } finally { setIsDeleting(false); }
-  }, [itemToDelete, entraAuth, acquireTokenWithRecovery]);
 
   const columns = useMemo<GridColDef<GridRow>[]>(() => {
     const baseColumns: GridColDef<GridRow>[] = [
       { field: 'id', filterable: false, headerName: 'Contact ID', width: 120, align: 'center', getApplyQuickFilterFn: () => null },
-      {
-        field: 'vmx3_unread', filterable: false, headerName: '', width: 70, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
-          <Tooltip title={params.value === 'Y' ? "Unread" : "Played"}>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-              {params.value === 'Y' ? <MailOutlineIcon color="primary" /> : <CheckCircleIcon color="action" />}
-            </Box>
-          </Tooltip>
-        )
-      },
-      { field: 'vmx3_timestamp', headerName: 'Date', headerAlign: 'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date(value as string).toLocaleString() : '' },
-      { field: 'vmx3_queue_name', headerName: 'Queue', headerAlign: 'center', width: 210, align: 'center' },
-      { field: 'vmx3_customer_number', headerName: 'Caller number', headerAlign: 'center', width: 130, align: 'center' },
-      { field: 'vmx3_dialed_number', headerName: 'Dialed number', headerAlign: 'center', width: 130, align: 'center' },
-      { field: 'vmx3_lang_value', headerName: 'Language', headerAlign: 'center', width: 100, align: 'center' },
-      {
-        field: 'presigned_url', filterable: false, sortable: false, headerName: 'Listen', headerAlign: 'center', width: 220, align: 'center', renderCell: (params) => (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-            <audio controls src={params.value as string} onPlay={handleAudioPlay} onEnded={() => handleMarkAsRead(params.row.id, params.row.fileName)} style={{ height: '24px', width: '250px' }} />
-          </Box>
-        )
-      },
-      {
-        field: 'transcript', filterable: false, sortable: false, headerName: 'Transcript', headerAlign: 'center', width: 120, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <TranscriptPopup text={(params.value as string) ?? ""} />
-          </Box>
-        )
-      },
+      { field: 'initiation_timestamp', headerName: 'Date', headerAlign: 'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date(value as string).toLocaleString() : '' },
+      { field: 'queue_name', headerName: 'Queue', headerAlign: 'center', width: 210, align: 'center' },
+      { field: 'customer_number', headerName: 'Caller number', headerAlign: 'center', width: 130, align: 'center' },
+      { field: 'system_number', headerName: 'Dialed number', headerAlign: 'center', width: 130, align: 'center' },
+      { field: 'language', headerName: 'Language', headerAlign: 'center', width: 100, align: 'center' },
       {
         field: 'dial_action', headerName: 'Call back', sortable: false, width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
-          <IconButton color="primary" onClick={() => onDialNumberClicked(params.row.vmx3_customer_number, params.row.vmx3_contact_id)}><PhoneIcon /></IconButton>
+          <IconButton color="primary" onClick={() => onDialNumberClicked(params.row.customer_number, params.row.contact_id)}><PhoneIcon /></IconButton>
         )
-      },
-      {
-        field: 'delete_action', filterable: false, sortable: false, headerName: '', width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (canDeleteVM === 'Y') ? (
-          <IconButton onClick={() => { setItemToDelete({ id: params.row.id, fileName: params.row.fileName }); setDeleteDialogOpen(true); }}><DeleteIcon /></IconButton>
-        ) : null
       }
     ];
     return baseColumns.filter(col => isIframe || col.field !== 'dial_action');
-  }, [canDeleteVM, onDialNumberClicked, handleAudioPlay, handleMarkAsRead]);
+  }, [onDialNumberClicked]);
 
   if (!searchResult) return <Box sx={{ p: 5, textAlign: 'center' }}>No search performed.</Box>;
 
@@ -357,17 +258,6 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
           },
         }}
       />
-
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent><DialogContentText>Permanently delete this voicemail?</DialogContentText></DialogContent>
-        <DialogActions sx={{ pb: 2, px: 3 }}>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">Cancel</Button>
-          <Button color="error" variant="contained" disabled={isDeleting} onClick={confirmDelete}>
-            {isDeleting ? <CircularProgress size={24} color="inherit" /> : "Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

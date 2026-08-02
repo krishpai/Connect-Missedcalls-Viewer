@@ -1,14 +1,12 @@
-import { MsalAuthenticationTemplate, useIsAuthenticated } from "@azure/msal-react";
+import { MsalAuthenticationTemplate } from "@azure/msal-react";
 import { InteractionType } from "@azure/msal-browser";
 //import { useState } from "react";
 /*
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 */
-import "./App.css";
 
 function App() {
-  // const isAuthenticated = useIsAuthenticated();
 
   return (
     <>

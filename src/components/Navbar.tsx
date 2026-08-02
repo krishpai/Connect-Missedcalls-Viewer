@@ -4,13 +4,12 @@ import logo from "../assets/veradium_logo.png";
 
 interface NavbarProps {
   userName: string;
-  region: string;
   companyName: string;
 }
 /** TEST change */
-const Navbar: React.FC<NavbarProps> = ({ userName, region, companyName }) => {
+const Navbar: React.FC<NavbarProps> = ({ userName, companyName }) => {
   return (
-    <AppBar       position="fixed"      sx={{ backgroundColor: "#1976d2", width: "100%", left: 0, top: 0 }}>
+    <AppBar position="fixed" sx={{ backgroundColor: "#1976d2", width: "100%", left: 0, top: 0 }}>
       {/**Toolbar	A layout wrapper.	Provides consistent horizontal padding and a min-height that scales with the screen size (responsive height). */}
       <Toolbar>
         {/* The Box component is a generic container for grouping other components. 
@@ -35,7 +34,7 @@ const Navbar: React.FC<NavbarProps> = ({ userName, region, companyName }) => {
         <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body1">{userName} - {region} </Typography>
+          <Typography variant="body1">{userName} </Typography>
         </Box>
       </Toolbar>
     </AppBar>
