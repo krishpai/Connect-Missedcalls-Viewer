@@ -193,7 +193,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
   const columns = useMemo<GridColDef<GridRow>[]>(() => {
     const baseColumns: GridColDef<GridRow>[] = [
       { field: 'id', filterable: false, headerName: 'Contact ID', width: 120, align: 'center', getApplyQuickFilterFn: () => null },
-      { field: 'initiation_timestamp', headerName: 'Date', headerAlign: 'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date(value as string).toLocaleString() : '' },
+      { field: 'initiation_timestamp', headerName: 'Date', headerAlign: 'center', width: 220, align: 'center', valueFormatter: (value) => value ? new Date((value as string).slice(0, 19)).toLocaleString() : '' },
       { field: 'queue_name', headerName: 'Queue', headerAlign: 'center', width: 210, align: 'center' },
       { field: 'customer_number', headerName: 'Caller number', headerAlign: 'center', width: 130, align: 'center' },
       { field: 'system_number', headerName: 'Dialed number', headerAlign: 'center', width: 130, align: 'center' },
