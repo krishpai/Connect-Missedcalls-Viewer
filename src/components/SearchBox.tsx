@@ -115,8 +115,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
       >
         <FormControl sx={{ mb: 1, alignItems: "center" }}>
           <RadioGroup row aria-labelledby="query-type-label" name="queryType" value={queryType} onChange={(e) => setQueryType(e.target.value)} >
-            <FormControlLabel value="Self" control={<Radio />} label="New" />
-            <FormControlLabel value="Queue" control={<Radio />} label="Deleted" />
+            <FormControlLabel value="Self" control={<Radio />} label="Self" />
+            <FormControlLabel value="Queue" control={<Radio />} label="Queue" />
             <FormControlLabel value="All" control={<Radio />} label="All" />
           </RadioGroup>
         </FormControl>
