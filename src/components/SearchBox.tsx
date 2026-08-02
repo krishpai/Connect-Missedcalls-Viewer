@@ -65,7 +65,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
         const data = await response.json();
 
         if (data.success && data.row_count > 0) {
-          console.log("rows: " + JSON.stringify(data["rows"]));
+
           onSearchResultChange(JSON.stringify(data["rows"]));
         }
         else {

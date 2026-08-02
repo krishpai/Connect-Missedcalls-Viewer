@@ -170,7 +170,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
     if (!searchResult) return [];
     try {
       const data = JSON.parse(searchResult);
-      const rawData: Record<string, MatchedObject> = data.matched_objects || {};
+      const rawData: Record<string, MatchedObject> = data || {};
       return Object.entries(rawData)
         .map(([fileName, details]) => ({
           id: details.contact_id,
