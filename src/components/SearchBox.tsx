@@ -36,7 +36,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
     if (entraAuth)
       apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_missed_calls_records&userName=${userName}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
     else
-      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_voice_messages&userName=${userName}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
+      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_missed_calls_records&userName=${userName}&start_date=${startDate}&end_date=${endDate}&query_type=${queryType}`;
 
     console.log("apiUrl: " + apiUrl)
     let accessToken: string = "none";
