@@ -64,8 +64,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
 
         const data = await response.json();
 
-        if (data.success && data.matched_objects_count > 0) {
-          onSearchResultChange(JSON.stringify(data));
+        if (data.success && data.row_count > 0) {
+          onSearchResultChange(JSON.stringify(data["rows"]));
         }
         else {
           setSearchFailedNoMessages(true);
@@ -135,7 +135,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
 
         {!loading && searchFailedNoMessages && (
           <Typography color="error" sx={{ mt: 2, fontWeight: 500 }}>
-            No voice messages found for the selected criteria.
+            No missed calls found for the selected criteria.
           </Typography>
         )}
         {!loading && searchFailedServerOverloaded && (
