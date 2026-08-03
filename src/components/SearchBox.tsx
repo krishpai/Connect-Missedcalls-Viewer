@@ -10,10 +10,11 @@ const API_ENDPOINT_CONNECT_AUTH = import.meta.env.VITE_API_URL_CONNECT_AUTH;
 interface SearchBoxProps {
   userName: string;
   entraAuth: boolean;
+  region: string;
   onSearchResultChange: (value: string) => void;
 }
 
-export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSearchResultChange }) => {
+export const SearchBox: React.FC<SearchBoxProps> = ({ userName, region, entraAuth, onSearchResultChange }) => {
 
 
   const [startDate, setStartDate] = useState<string>("");
@@ -37,9 +38,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
     let apiUrl;
 
     if (entraAuth)
-      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_missed_calls_records&username=${userName}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&query_type=${queryType}`;
+      apiUrl = `${API_ENDPOINT_ENTRA_AUTH}?function_code=fetch_missed_calls_records&username=${userName}&region=${region}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&query_type=${queryType}`;
     else
-      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_missed_calls_records&username=${userName}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&query_type=${queryType}`;
+      apiUrl = `${API_ENDPOINT_CONNECT_AUTH}?function_code=fetch_missed_calls_records&username=${userName}&region=${region}&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&query_type=${queryType}`;
 
     console.log("apiUrl: " + apiUrl)
     let accessToken: string = "none";

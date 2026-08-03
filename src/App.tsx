@@ -33,7 +33,7 @@ function App() {
   const [contactClient, setContactClient] = useState<ContactClient | null>(null);
 
   // Business State
-
+  const [region, setRegion] = useState("");
   const [userName, setUserName] = useState<string | null | undefined>("");
 
   const [searchResult, setSearchResult] = useState("");
@@ -67,9 +67,8 @@ function App() {
       const data = await response.json();
       if (data?.success && data?.found) {
         setUserName(data.userName);
-
+        setRegion(data.region);
         console.log("User name identified:", data.userName);
-
       }
       else {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -177,12 +176,12 @@ function App() {
 
   // Main UI Fragment to keep code DRY
   const renderMainContent = () => (
-    <PageLayout userName={userName ?? "User"} >
+    <PageLayout userName={userName ?? "User"} region={region}>
       {loading ? (
         <p>Loading preferences...</p>
       ) : (
         <>
-          <SearchBox userName={userName ?? "User"} entraAuth={!isIframe} onSearchResultChange={setSearchResult} />
+          <SearchBox userName={userName ?? "User"} region={region} entraAuth={!isIframe} onSearchResultChange={setSearchResult} />
           <Divider sx={{ my: 0.5, border: "1px solid", borderColor: "primary.dark" }} />
           {searchResult && (<SearchResultsView searchResult={searchResult} entraAuth={!isIframe} onDialNumberClicked={makeOutboundCall} />)}
         </>
