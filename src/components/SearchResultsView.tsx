@@ -40,7 +40,7 @@ interface MatchedObject {
   system_number: string;
   queue_id: string;
   language: string;
-  handled_by_name: string;
+
 }
 
 interface GridRow extends MatchedObject {
@@ -199,7 +199,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
       { field: 'customer_number', headerName: 'Caller number', headerAlign: 'center', width: 130, align: 'center' },
       { field: 'system_number', headerName: 'Dialed number', headerAlign: 'center', width: 130, align: 'center' },
       { field: 'language', headerName: 'Language', headerAlign: 'center', width: 100, align: 'center' },
-      { field: 'handled_by_name', headerName: 'Handled by', headerAlign: 'center', width: 200, align: 'center' },
+
 
       {
         field: 'dial_action', headerName: 'Call back', sortable: false, width: 90, align: 'center', getApplyQuickFilterFn: () => null, renderCell: (params) => (
