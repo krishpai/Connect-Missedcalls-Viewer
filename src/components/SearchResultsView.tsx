@@ -44,7 +44,7 @@ interface MatchedObject {
 
 interface GridRow extends MatchedObject {
   id: string;
-  fileName: string;
+
 }
 
 /**
@@ -134,13 +134,10 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
     try {
       const data = JSON.parse(searchResult);
       const rawData: Record<string, MatchedObject> = data || {};
-      return Object.entries(rawData)
-        .map(([fileName, details]) => ({
-          id: details.contact_id,
-          fileName,
-          ...details,
-          queue_name: details.queue_name
-        }))
+      return Object.values(rawData).map((details) => ({
+        ...details,
+        id: details.contact_id,
+      }));
 
     } catch (e) { console.log(e); return []; }
   }, [searchResult]);
