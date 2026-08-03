@@ -20,7 +20,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ userName, entraAuth, onSea
   const [endDate, setEndDate] = useState<string>("");
   const [searchFailedNoMessages, setSearchFailedNoMessages] = useState<boolean>(false);
   const [searchFailedServerOverloaded, setSearchFailedServerOverloaded] = useState<boolean>(false);
-  const [queryType, setQueryType] = useState<string>("New");
+  const [queryType, setQueryType] = useState<string>("All");
   const [loading, setLoading] = useState<boolean>(false);
 
   const acquireTokenWithRecovery = useAcquireTokenWithRecovery();
