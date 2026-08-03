@@ -40,7 +40,7 @@ interface MatchedObject {
   system_number: string;
   queue_id: string;
   language: string;
-
+  handled_by_name: string;
 }
 
 interface GridRow extends MatchedObject {
