@@ -113,7 +113,7 @@ const CustomFooter = (props: CustomFooterProps) => {
         onPageChange={onPageChange ?? (() => { })}
         rowsPerPage={pageSize}
         onRowsPerPageChange={onPageSizeChange}
-        rowsPerPageOptions={[15, 20, 25]}
+
         sx={{
           border: 'none',
           '& .MuiTablePagination-toolbar': {
