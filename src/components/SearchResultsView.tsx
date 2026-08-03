@@ -14,7 +14,6 @@ import {
   Tooltip,
   IconButton,
   Box,
-  TablePagination,
 } from '@mui/material';
 
 
@@ -66,11 +65,6 @@ interface CustomFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 const CustomFooter = (props: CustomFooterProps) => {
   const {
     contactId,
-    count = 0,
-    page = 0,
-    pageSize = 10,
-    onPageChange,
-    onPageSizeChange,
     ...other
   } = props;
 
@@ -106,7 +100,6 @@ const CustomFooter = (props: CustomFooterProps) => {
         )}
       </Box>
 
-
     </GridFooterContainer>
   );
 };
@@ -135,7 +128,6 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({ id: false });
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({ type: 'include', ids: new Set() });
 
-  const [paginationModel, setPaginationModel] = useState({ pageSize: 10, page: 0 });
 
   const gridRows = useMemo<GridRow[]>(() => {
     if (!searchResult) return [];
@@ -193,8 +185,6 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
         columns={columns}
         columnVisibilityModel={columnVisibilityModel}
         onColumnVisibilityModelChange={setColumnVisibilityModel}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
         rowSelectionModel={rowSelectionModel}
         onRowSelectionModelChange={setRowSelectionModel}
         hideFooterSelectedRowCount
@@ -207,12 +197,6 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
           footer: {
             contactId: selectedContactId,
             count: gridRows.length,
-            page: paginationModel.page,
-            pageSize: paginationModel.pageSize,
-            onPageChange: (_event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) =>
-              setPaginationModel(prev => ({ ...prev, page: newPage })),
-            onPageSizeChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-              setPaginationModel(prev => ({ ...prev, pageSize: parseInt(event.target.value, 10), page: 0 })),
           } as CustomFooterProps, // Use our defined interface instead of 'any'
           toolbar: {
             showQuickFilter: true,
