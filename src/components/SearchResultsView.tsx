@@ -106,37 +106,7 @@ const CustomFooter = (props: CustomFooterProps) => {
         )}
       </Box>
 
-      <TablePagination
-        component="div"
-        count={count}
-        page={page}
-        onPageChange={onPageChange ?? (() => { })}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={onPageSizeChange}
 
-        sx={{
-          border: 'none',
-          '& .MuiTablePagination-toolbar': {
-            minHeight: '52px',
-            height: '52px',
-            display: 'flex',
-            alignItems: 'center',
-            paddingY: 0,
-          },
-          '& .MuiTablePagination-selectLabel': {
-            margin: 0,
-            lineHeight: 1,
-            display: 'flex',
-            alignItems: 'center'
-          },
-          '& .MuiTablePagination-displayedRows': {
-            margin: 0,
-            lineHeight: 1,
-            display: 'flex',
-            alignItems: 'center'
-          },
-        }}
-      />
     </GridFooterContainer>
   );
 };
