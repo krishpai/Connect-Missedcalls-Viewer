@@ -128,17 +128,15 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({ id: false });
   const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>({ type: 'include', ids: new Set() });
 
-
   const gridRows = useMemo<GridRow[]>(() => {
     if (!searchResult) return [];
     try {
       const data = JSON.parse(searchResult);
       const rawData: Record<string, MatchedObject> = data || {};
-      return Object.values(rawData).map((details) => ({
+      return Object.values(rawData).map((details, index) => ({
         ...details,
-        id: details.contact_id,
+        id: `row-${index}`,      // <-- temporary diagnostic
       }));
-
     } catch (e) { console.log(e); return []; }
   }, [searchResult]);
 
@@ -176,6 +174,7 @@ export const SearchResultsView: React.FC<SearchResultsViewProps> = ({ searchResu
       <DataGridPro
         disableColumnMenu
         disableColumnSelector
+        disableVirtualization
         pagination
         showToolbar
         rows={gridRows}
